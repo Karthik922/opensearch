@@ -1,0 +1,86 @@
+services:
+  # ---------------- OpenSearch database ----------------
+  opensearch:
+    image: opensearchproject/opensearch:2.19.1
+    container_name: opensearch
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Dev setup: plain HTTP, no auth. Remove these two lines (and set
+      # OPENSEARCH_INITIAL_ADMIN_PASSWORD) to enable TLS + login.
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200" # REST API
+      - "9600:9600" # Performance Analyzer
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [backend]
+
+  # ---------------- OpenSearch Dashboards (web UI, optional) ----------------
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.1
+    container_name: opensearch-dashboards
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks: [backend]
+
+  # ---------------- PostgreSQL (source of truth for the relational lab) ----------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: shop-postgres
+    environment:
+      - POSTGRES_DB=shop
+      - POSTGRES_USER=shop
+      - POSTGRES_PASSWORD=shop
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro # schema + seed, run on first start only
+    ports:
+      - "${PG_PORT:-5434}:5432" # host port 5434 (5432/5433 are often taken)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [backend]
+
+  # ---------------- NestJS backend ----------------
+  api:
+    build: .
+    container_name: nest-opensearch-api
+    environment:
+      - PORT=3000
+      - OPENSEARCH_NODE=http://opensearch:9200
+      - OPENSEARCH_INDEX=products
+    ports:
+      - "${API_PORT:-3000}:3000" # host port; override with API_PORT=3001 docker compose up
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [backend]
+
+volumes:
+  opensearch-data:
+  postgres-data:
+
+networks:
+  backend:

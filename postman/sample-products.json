@@ -1,0 +1,180 @@
+[
+  {
+    "id": "p-1001",
+    "name": "Wireless Mouse",
+    "description": "Ergonomic 2.4GHz wireless mouse with silent clicks and USB receiver",
+    "category": "electronics",
+    "tags": [
+      "computer",
+      "accessories"
+    ],
+    "price": 19.99,
+    "stock": 150
+  },
+  {
+    "id": "p-1002",
+    "name": "Mechanical Keyboard",
+    "description": "RGB backlit mechanical keyboard with blue switches",
+    "category": "electronics",
+    "tags": [
+      "computer",
+      "gaming"
+    ],
+    "price": 79.5,
+    "stock": 40
+  },
+  {
+    "id": "p-1003",
+    "name": "Gaming Headset",
+    "description": "Surround sound headset with noise cancelling microphone",
+    "category": "electronics",
+    "tags": [
+      "gaming",
+      "audio"
+    ],
+    "price": 59,
+    "stock": 0
+  },
+  {
+    "id": "p-1004",
+    "name": "27 inch 4K Monitor",
+    "description": "IPS display with HDR10 and USB-C power delivery",
+    "category": "electronics",
+    "tags": [
+      "computer",
+      "display"
+    ],
+    "price": 329,
+    "stock": 12
+  },
+  {
+    "id": "p-1005",
+    "name": "Bluetooth Speaker",
+    "description": "Portable waterproof speaker with 20 hour battery",
+    "category": "electronics",
+    "tags": [
+      "audio",
+      "outdoor"
+    ],
+    "price": 45,
+    "stock": 75
+  },
+  {
+    "id": "p-1006",
+    "name": "USB-C Hub",
+    "description": "7-in-1 hub with HDMI, SD card reader and 100W charging",
+    "category": "electronics",
+    "tags": [
+      "computer",
+      "accessories"
+    ],
+    "price": 34.9,
+    "stock": 0
+  },
+  {
+    "id": "p-2001",
+    "name": "Ceramic Coffee Mug",
+    "description": "Dishwasher safe ceramic mug, 350ml",
+    "category": "kitchen",
+    "tags": [
+      "home",
+      "coffee"
+    ],
+    "price": 8.99,
+    "stock": 300
+  },
+  {
+    "id": "p-2002",
+    "name": "French Press",
+    "description": "Stainless steel coffee maker, 1 litre",
+    "category": "kitchen",
+    "tags": [
+      "coffee"
+    ],
+    "price": 27.5,
+    "stock": 60
+  },
+  {
+    "id": "p-2003",
+    "name": "Chef Knife",
+    "description": "Japanese steel 8 inch chef knife with wooden handle",
+    "category": "kitchen",
+    "tags": [
+      "cooking"
+    ],
+    "price": 64,
+    "stock": 18
+  },
+  {
+    "id": "p-3001",
+    "name": "Clean Code",
+    "description": "A handbook of agile software craftsmanship by Robert C. Martin",
+    "category": "books",
+    "tags": [
+      "programming",
+      "bestseller"
+    ],
+    "price": 32.99,
+    "stock": 25
+  },
+  {
+    "id": "p-3002",
+    "name": "Designing Data-Intensive Applications",
+    "description": "Reliable, scalable and maintainable systems, databases and search engines",
+    "category": "books",
+    "tags": [
+      "programming",
+      "databases"
+    ],
+    "price": 44.5,
+    "stock": 9
+  },
+  {
+    "id": "p-4001",
+    "name": "Running Shoes",
+    "description": "Lightweight breathable running shoes for road and trail",
+    "category": "sports",
+    "tags": [
+      "running",
+      "outdoor"
+    ],
+    "price": 89.99,
+    "stock": 33
+  },
+  {
+    "id": "p-4002",
+    "name": "Yoga Mat",
+    "description": "Non-slip 6mm yoga mat with carry strap",
+    "category": "sports",
+    "tags": [
+      "fitness",
+      "yoga"
+    ],
+    "price": 24,
+    "stock": 120
+  },
+  {
+    "id": "p-4003",
+    "name": "Adjustable Dumbbells",
+    "description": "Pair of adjustable dumbbells from 2 to 24 kg",
+    "category": "sports",
+    "tags": [
+      "fitness",
+      "gym"
+    ],
+    "price": 249,
+    "stock": 0
+  },
+  {
+    "id": "p-5001",
+    "name": "Cotton T-Shirt",
+    "description": "Organic cotton crew neck t-shirt, regular fit",
+    "category": "fashion",
+    "tags": [
+      "clothing",
+      "summer"
+    ],
+    "price": 15,
+    "stock": 500
+  }
+]

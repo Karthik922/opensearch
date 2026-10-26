@@ -1,0 +1,72 @@
+### Ready-to-run requests (VS Code "REST Client" extension or JetBrains HTTP client)
+@base = http://localhost:3000
+
+### Health
+GET {{base}}/health
+
+### Create a record
+POST {{base}}/products
+Content-Type: application/json
+
+{
+  "id": "p-1001",
+  "name": "Wireless Mouse",
+  "description": "Ergonomic 2.4GHz wireless mouse with silent clicks",
+  "category": "electronics",
+  "tags": ["computer", "accessories"],
+  "price": 19.99,
+  "stock": 150
+}
+
+### Create a record with an auto-generated id
+POST {{base}}/products
+Content-Type: application/json
+
+{
+  "name": "USB-C Hub",
+  "description": "7-in-1 hub with HDMI and card reader",
+  "category": "electronics",
+  "tags": ["computer"],
+  "price": 34.9,
+  "stock": 25
+}
+
+### Bulk create
+POST {{base}}/products/bulk
+Content-Type: application/json
+
+[
+  {"id":"p-1002","name":"Mechanical Keyboard","description":"RGB backlit mechanical keyboard, blue switches","category":"electronics","tags":["computer","gaming"],"price":79.5,"stock":40},
+  {"id":"p-1003","name":"Gaming Headset","description":"Surround sound headset with noise cancelling mic","category":"electronics","tags":["gaming","audio"],"price":59,"stock":0},
+  {"id":"p-2001","name":"Coffee Mug","description":"Ceramic mug, 350ml","category":"kitchen","tags":["home"],"price":8.99,"stock":300}
+]
+
+### Get by id
+GET {{base}}/products/p-1001
+
+### Search: full text (typo tolerant)
+GET {{base}}/products/search?q=wirless mous
+
+### Search: filters + sort
+GET {{base}}/products/search?category=electronics&inStock=true&minPrice=10&maxPrice=100&sortBy=price&order=asc
+
+### Search: by tags, paginated
+GET {{base}}/products/search?tags=gaming,audio&page=1&size=5
+
+### Search: list everything
+GET {{base}}/products/search
+
+### Edit (partial update)
+PATCH {{base}}/products/p-1001
+Content-Type: application/json
+
+{ "price": 17.49, "stock": 0 }
+
+### Update (full replace)
+PUT {{base}}/products/p-2001
+Content-Type: application/json
+
+{ "name": "Travel Mug", "category": "kitchen", "price": 12.5, "stock": 80 }
+
+### Delete
+DELETE {{base}}/products/p-2001

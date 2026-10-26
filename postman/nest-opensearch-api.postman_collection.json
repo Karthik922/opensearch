@@ -1,0 +1,1521 @@
+{
+  "info": {
+    "name": "NestJS OpenSearch API",
+    "description": "CRUD + search API for products stored in OpenSearch.\n\n**Run order:** start with `0. Setup → Seed sample data (bulk)`, then run any request. Or run the whole collection with the Collection Runner. Every request has tests.\n\nSet the `baseUrl` collection variable to where the API runs (default `http://localhost:3000`).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "createdId",
+      "value": ""
+    },
+    {
+      "key": "cursor",
+      "value": ""
+    },
+    {
+      "key": "lastPrice",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"OpenSearch is reachable\", () => {",
+                  "  const s = pm.response.json().opensearch.status;",
+                  "  pm.expect([\"green\", \"yellow\"]).to.include(s);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Seed sample data (bulk)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No bulk errors\", () => pm.expect(pm.response.json().errors).to.be.false);",
+                  "pm.test(\"15 items indexed\", () => pm.expect(pm.response.json().items).to.have.length(15));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id\": \"p-1001\",\n    \"name\": \"Wireless Mouse\",\n    \"description\": \"Ergonomic 2.4GHz wireless mouse with silent clicks and USB receiver\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"computer\",\n      \"accessories\"\n    ],\n    \"price\": 19.99,\n    \"stock\": 150\n  },\n  {\n    \"id\": \"p-1002\",\n    \"name\": \"Mechanical Keyboard\",\n    \"description\": \"RGB backlit mechanical keyboard with blue switches\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"computer\",\n      \"gaming\"\n    ],\n    \"price\": 79.5,\n    \"stock\": 40\n  },\n  {\n    \"id\": \"p-1003\",\n    \"name\": \"Gaming Headset\",\n    \"description\": \"Surround sound headset with noise cancelling microphone\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"gaming\",\n      \"audio\"\n    ],\n    \"price\": 59,\n    \"stock\": 0\n  },\n  {\n    \"id\": \"p-1004\",\n    \"name\": \"27 inch 4K Monitor\",\n    \"description\": \"IPS display with HDR10 and USB-C power delivery\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"computer\",\n      \"display\"\n    ],\n    \"price\": 329,\n    \"stock\": 12\n  },\n  {\n    \"id\": \"p-1005\",\n    \"name\": \"Bluetooth Speaker\",\n    \"description\": \"Portable waterproof speaker with 20 hour battery\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"audio\",\n      \"outdoor\"\n    ],\n    \"price\": 45,\n    \"stock\": 75\n  },\n  {\n    \"id\": \"p-1006\",\n    \"name\": \"USB-C Hub\",\n    \"description\": \"7-in-1 hub with HDMI, SD card reader and 100W charging\",\n    \"category\": \"electronics\",\n    \"tags\": [\n      \"computer\",\n      \"accessories\"\n    ],\n    \"price\": 34.9,\n    \"stock\": 0\n  },\n  {\n    \"id\": \"p-2001\",\n    \"name\": \"Ceramic Coffee Mug\",\n    \"description\": \"Dishwasher safe ceramic mug, 350ml\",\n    \"category\": \"kitchen\",\n    \"tags\": [\n      \"home\",\n      \"coffee\"\n    ],\n    \"price\": 8.99,\n    \"stock\": 300\n  },\n  {\n    \"id\": \"p-2002\",\n    \"name\": \"French Press\",\n    \"description\": \"Stainless steel coffee maker, 1 litre\",\n    \"category\": \"kitchen\",\n    \"tags\": [\n      \"coffee\"\n    ],\n    \"price\": 27.5,\n    \"stock\": 60\n  },\n  {\n    \"id\": \"p-2003\",\n    \"name\": \"Chef Knife\",\n    \"description\": \"Japanese steel 8 inch chef knife with wooden handle\",\n    \"category\": \"kitchen\",\n    \"tags\": [\n      \"cooking\"\n    ],\n    \"price\": 64,\n    \"stock\": 18\n  },\n  {\n    \"id\": \"p-3001\",\n    \"name\": \"Clean Code\",\n    \"description\": \"A handbook of agile software craftsmanship by Robert C. Martin\",\n    \"category\": \"books\",\n    \"tags\": [\n      \"programming\",\n      \"bestseller\"\n    ],\n    \"price\": 32.99,\n    \"stock\": 25\n  },\n  {\n    \"id\": \"p-3002\",\n    \"name\": \"Designing Data-Intensive Applications\",\n    \"description\": \"Reliable, scalable and maintainable systems, databases and search engines\",\n    \"category\": \"books\",\n    \"tags\": [\n      \"programming\",\n      \"databases\"\n    ],\n    \"price\": 44.5,\n    \"stock\": 9\n  },\n  {\n    \"id\": \"p-4001\",\n    \"name\": \"Running Shoes\",\n    \"description\": \"Lightweight breathable running shoes for road and trail\",\n    \"category\": \"sports\",\n    \"tags\": [\n      \"running\",\n      \"outdoor\"\n    ],\n    \"price\": 89.99,\n    \"stock\": 33\n  },\n  {\n    \"id\": \"p-4002\",\n    \"name\": \"Yoga Mat\",\n    \"description\": \"Non-slip 6mm yoga mat with carry strap\",\n    \"category\": \"sports\",\n    \"tags\": [\n      \"fitness\",\n      \"yoga\"\n    ],\n    \"price\": 24,\n    \"stock\": 120\n  },\n  {\n    \"id\": \"p-4003\",\n    \"name\": \"Adjustable Dumbbells\",\n    \"description\": \"Pair of adjustable dumbbells from 2 to 24 kg\",\n    \"category\": \"sports\",\n    \"tags\": [\n      \"fitness\",\n      \"gym\"\n    ],\n    \"price\": 249,\n    \"stock\": 0\n  },\n  {\n    \"id\": \"p-5001\",\n    \"name\": \"Cotton T-Shirt\",\n    \"description\": \"Organic cotton crew neck t-shirt, regular fit\",\n    \"category\": \"fashion\",\n    \"tags\": [\n      \"clothing\",\n      \"summer\"\n    ],\n    \"price\": 15,\n    \"stock\": 500\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/bulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "bulk"
+              ]
+            },
+            "description": "Loads 15 sample products. Safe to run again: existing ids are overwritten."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Create",
+      "item": [
+        {
+          "name": "Create product (auto id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Has generated id\", () => pm.expect(body.id).to.be.a(\"string\").and.not.empty);",
+                  "pm.test(\"inStock computed\", () => pm.expect(body.inStock).to.be.true);",
+                  "pm.collectionVariables.set(\"createdId\", body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Smart Watch\",\n  \"description\": \"Fitness tracker with heart rate monitor and GPS\",\n  \"category\": \"electronics\",\n  \"tags\": [\n    \"wearable\",\n    \"fitness\"\n  ],\n  \"price\": 149,\n  \"stock\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "No `id` sent, so a UUID is generated. The id is saved to the `createdId` variable for the following requests."
+          }
+        },
+        {
+          "name": "Create product (custom id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Out of stock\", () => pm.expect(pm.response.json().inStock).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"demo-{{$timestamp}}\",\n  \"name\": \"Desk Lamp\",\n  \"description\": \"LED desk lamp with dimmer and USB port\",\n  \"category\": \"home\",\n  \"tags\": [\n    \"lighting\"\n  ],\n  \"price\": 22.5,\n  \"stock\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "Your own id. `{{$timestamp}}` keeps it unique on every run."
+          }
+        },
+        {
+          "name": "Create duplicate id → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"p-1001\",\n  \"name\": \"Duplicate\",\n  \"category\": \"electronics\",\n  \"price\": 1,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create invalid body → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Lists validation messages\", () => pm.expect(pm.response.json().message).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"price\": -5,\n  \"color\": \"red\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "Empty name, missing category/stock, negative price and an unknown field."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Read",
+      "item": [
+        {
+          "name": "Get product by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Correct product\", () => pm.expect(pm.response.json().name).to.eql(\"Wireless Mouse\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/p-1001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "p-1001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get created product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get missing id → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "does-not-exist"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Search",
+      "item": [
+        {
+          "name": "List all (no filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Has items and facets\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.total).to.be.at.least(15);",
+                  "  pm.expect(b.facets.categories).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Full-text search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().items.map(i => i.id);",
+                  "pm.test(\"Finds coffee products\", () => pm.expect(ids).to.include.members([\"p-2001\", \"p-2002\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?q=coffee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "coffee",
+                  "description": "Searches name, description and tags"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Typo-tolerant search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Top hit is the keyboard\", () => pm.expect(pm.response.json().items[0].id).to.eql(\"p-1002\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?q=mechanicl keybord",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "mechanicl keybord",
+                  "description": "Misspelled on purpose"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Only books\", () => pm.response.json().items.forEach(i => pm.expect(i.category).to.eql(\"books\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?category=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "books"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by tags (any)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().items.map(i => i.id);",
+                  "pm.test(\"Gaming/audio products\", () => pm.expect(ids).to.include.members([\"p-1002\", \"p-1003\", \"p-1005\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?tags=gaming,audio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "tags",
+                  "value": "gaming,audio",
+                  "description": "Comma separated, matches any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Price range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All within 20–50\", () => pm.response.json().items.forEach(i => pm.expect(i.price).to.be.within(20, 50)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?minPrice=20&maxPrice=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "20"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "In stock only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All in stock\", () => pm.response.json().items.forEach(i => pm.expect(i.inStock).to.be.true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?inStock=true&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Out of stock only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All out of stock\", () => pm.response.json().items.forEach(i => pm.expect(i.inStock).to.be.false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?inStock=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "inStock",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by price (low → high)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const prices = pm.response.json().items.map(i => i.price);",
+                  "pm.test(\"Ascending prices\", () => pm.expect(prices).to.eql([...prices].sort((a, b) => a - b)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?sortBy=price&order=asc&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by newest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?sortBy=createdAt&order=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "order",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by name (A → Z)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Alphabetical\", () => pm.expect(pm.response.json().items.map(i => i.id)).to.eql([\"p-4003\", \"p-4001\", \"p-4002\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?category=sports&sortBy=name&order=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "sports"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "name"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pagination (page 2, size 5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Page metadata\", () => { pm.expect(b.page).to.eql(2); pm.expect(b.size).to.eql(5); pm.expect(b.items.length).to.be.at.most(5); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?page=2&size=5&sortBy=price&order=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Combined: text + filters + sort",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Matches every filter\", () => pm.response.json().items.forEach(i => {",
+                  "  pm.expect(i.category).to.eql(\"electronics\");",
+                  "  pm.expect(i.inStock).to.be.true;",
+                  "  pm.expect(i.price).to.be.at.most(100);",
+                  "}));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?q=computer&category=electronics&inStock=true&maxPrice=100&sortBy=price&order=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "computer"
+                },
+                {
+                  "key": "category",
+                  "value": "electronics"
+                },
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "100"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalid query param → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?sortBy=colour&size=500",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "colour"
+                },
+                {
+                  "key": "size",
+                  "value": "500"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Facets stay complete when a category is selected",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Only books in items\", () => b.items.forEach(i => pm.expect(i.category).to.eql(\"books\")));",
+                  "pm.test(\"Category facet still has other categories\", () => pm.expect(b.facets.categories.length).to.be.above(1));",
+                  "pm.test(\"Tags facet is narrowed to books\", () => pm.expect(b.facets.tags.map(t => t.tag)).to.include(\"programming\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?category=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "books"
+                }
+              ]
+            },
+            "description": "category/tags are applied with post_filter, so the categories facet still lists every category (multi-select facets)."
+          }
+        },
+        {
+          "name": "Cursor pagination – first page",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Has nextCursor\", () => pm.expect(b.nextCursor).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"cursor\", b.nextCursor);",
+                  "pm.collectionVariables.set(\"lastPrice\", b.items[b.items.length - 1].price);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?sortBy=price&order=asc&size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Saves nextCursor (search_after) into the `cursor` variable."
+          }
+        },
+        {
+          "name": "Cursor pagination – next page",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "const last = Number(pm.collectionVariables.get(\"lastPrice\"));",
+                  "pm.test(\"Continues after the previous page\", () => b.items.forEach(i => pm.expect(i.price).to.be.at.least(last)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?sortBy=price&order=asc&size=5&cursor={{cursor}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalid cursor → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?cursor=not-a-cursor",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "cursor",
+                  "value": "not-a-cursor"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Autocomplete (suggest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Suggests the keyboard\", () => pm.expect(pm.response.json().map(p => p.name)).to.include(\"Mechanical Keyboard\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/suggest?q=mech key&size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "suggest"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "mech key"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Autocomplete without q → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/suggest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "suggest"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Catalog statistics (aggregations)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Has totals\", () => pm.expect(b.totalProducts).to.be.at.least(15));",
+                  "pm.test(\"Per-category stats\", () => pm.expect(b.byCategory[0]).to.have.keys(\"category\", \"products\", \"avgPrice\", \"unitsInStock\", \"outOfStock\"));",
+                  "pm.test(\"Price ranges\", () => pm.expect(b.priceRanges).to.have.length(3));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "stats"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Update",
+      "item": [
+        {
+          "name": "Edit price (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Price changed\", () => pm.expect(b.price).to.eql(17.49));",
+                  "pm.test(\"Other fields kept\", () => pm.expect(b.name).to.eql(\"Wireless Mouse\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 17.49\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/p-1001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "p-1001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit stock to 0 (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"inStock recalculated\", () => pm.expect(pm.response.json().inStock).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 0,\n  \"tags\": [\n    \"wearable\",\n    \"fitness\",\n    \"sale\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Replace product (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Replaced\", () => pm.expect(pm.response.json().name).to.eql(\"Travel Coffee Mug\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Travel Coffee Mug\",\n  \"description\": \"Insulated stainless steel travel mug, 450ml\",\n  \"category\": \"kitchen\",\n  \"tags\": [\n    \"coffee\",\n    \"travel\"\n  ],\n  \"price\": 18,\n  \"stock\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/p-2001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "p-2001"
+              ]
+            },
+            "description": "Full replace: every required field must be sent. Optional fields you leave out are removed."
+          }
+        },
+        {
+          "name": "PUT missing required field → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Only a name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/p-2001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "p-2001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH missing id → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "does-not-exist"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Delete",
+      "item": [
+        {
+          "name": "Delete created product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Deleted\", () => pm.expect(pm.response.json().deleted).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get deleted product → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete missing id → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "does-not-exist"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
